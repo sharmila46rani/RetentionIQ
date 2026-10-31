@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Retention Offer Catalog{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Retention Offer Catalog</h3>
+    <p class="text-muted mb-0">Configurable retention incentives, discount ceilings, and eligibility guardrails.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('offers.eligibility_view') }}" class="btn btn-teal">
+      <i class="bi bi-shield-check me-1"></i>Test Eligibility Gate
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  {% for off in offers %}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <span class="fw-bold fs-6">{{ off.offer_name }}</span>
+          <div class="text-muted small">{{ off.offer_id }}</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <form method="POST" action="{{ url_for('offers.toggle_offer_status', offer_id=off.offer_id) }}" class="d-inline">
+            <button type="submit" class="btn btn-sm {% if off.status == 'Active' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" title="Toggle Active / Paused">
+              <i class="bi {% if off.status == 'Active' %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
+            </button>
+          </form>
+          <span class="badge {% if off.status == 'Active' %}bg-success-subtle text-success{% else %}bg-secondary{% endif %}">
+            {{ off.status }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <div class="p-2 bg-light rounded border text-center">
+              <div class="small text-muted">Incentive Type</div>
+              <div class="fw-bold text-teal">{{ off.offer_type }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-light rounded border text-center">
+              <div class="small text-muted">Discount Concession</div>
+              <div class="fw-bold text-primary">
+                {% if off.discount_pct > 0 %}{{ off.discount_pct }}% Off{% else %}${{ off.discount_amount }} Credit{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="small mb-2 d-flex justify-content-between">
+          <span class="text-muted">Target Product Plans:</span>
+          <span class="fw-semibold">{{ off.eligible_plans }}</span>
+        </div>
+        <div class="small mb-2 d-flex justify-content-between">
+          <span class="text-muted">Minimum Required Tenure:</span>
+          <span>{{ off.min_tenure_months }} months</span>
+        </div>
+        <div class="small mb-2 d-flex justify-content-between">
+          <span class="text-muted">Minimum Subscription MRR:</span>
+          <span>${{ off.min_subscription_mrr }}</span>
+        </div>
+        <div class="small mb-2 d-flex justify-content-between">
+          <span class="text-muted">Maximum Offer Cost Ceiling:</span>
+          <span class="text-danger fw-semibold">${{ off.max_offer_cost }}</span>
+        </div>
+        <div class="small mb-3 d-flex justify-content-between">
+          <span class="text-muted">Validity Period:</span>
+          <span>{{ off.valid_from.strftime('%Y-%m-%d') }} to {{ off.valid_to.strftime('%Y-%m-%d') }}</span>
+        </div>
+
+        <h6 class="fw-semibold small text-uppercase text-muted border-top pt-3 mb-2">Configured Eligibility Rules:</h6>
+        <ul class="list-group list-group-flush small">
+          {% for r in off.eligibility_rules %}
+          <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-check2-circle text-teal me-1"></i>{{ r.rule_code }}: {{ r.parameter_name }} {{ r.operator }} {{ r.parameter_value }}</span>
+            <span class="badge bg-light text-muted border">Margin: {{ "{:.0%}".format(r.margin_threshold_pct) }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

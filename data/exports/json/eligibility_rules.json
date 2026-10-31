@@ -1,0 +1,90 @@
+[
+  {
+    "rule_id": "RUL-OFF-2026-000001-01",
+    "offer_id": "OFF-2026-000001",
+    "rule_code": "MIN_TENURE",
+    "parameter_name": "tenure_months",
+    "operator": "GTE",
+    "parameter_value": "3",
+    "margin_threshold_pct": 0.2,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000001-02",
+    "offer_id": "OFF-2026-000001",
+    "rule_code": "MIN_MRR",
+    "parameter_name": "subscription_mrr",
+    "operator": "GTE",
+    "parameter_value": "100.0",
+    "margin_threshold_pct": 0.2,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000001-03",
+    "offer_id": "OFF-2026-000001",
+    "rule_code": "RISK_TIER",
+    "parameter_name": "risk_category",
+    "operator": "IN",
+    "parameter_value": "High,Critical",
+    "margin_threshold_pct": 0.2,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000002-04",
+    "offer_id": "OFF-2026-000002",
+    "rule_code": "MIN_TENURE",
+    "parameter_name": "tenure_months",
+    "operator": "GTE",
+    "parameter_value": "6",
+    "margin_threshold_pct": 0.15,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000002-05",
+    "offer_id": "OFF-2026-000002",
+    "rule_code": "RISK_TIER",
+    "parameter_name": "risk_category",
+    "operator": "IN",
+    "parameter_value": "Medium,High,Critical",
+    "margin_threshold_pct": 0.15,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000003-06",
+    "offer_id": "OFF-2026-000003",
+    "rule_code": "MIN_TENURE",
+    "parameter_name": "tenure_months",
+    "operator": "GTE",
+    "parameter_value": "4",
+    "margin_threshold_pct": 0.25,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000003-07",
+    "offer_id": "OFF-2026-000003",
+    "rule_code": "MARGIN_THRESHOLD",
+    "parameter_name": "unit_margin",
+    "operator": "GTE",
+    "parameter_value": "0.25",
+    "margin_threshold_pct": 0.25,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  },
+  {
+    "rule_id": "RUL-OFF-2026-000004-08",
+    "offer_id": "OFF-2026-000004",
+    "rule_code": "MIN_TENURE",
+    "parameter_name": "tenure_months",
+    "operator": "GTE",
+    "parameter_value": "1",
+    "margin_threshold_pct": 0.1,
+    "is_active": true,
+    "created_at": "2025-01-01T00:00:00"
+  }
+]

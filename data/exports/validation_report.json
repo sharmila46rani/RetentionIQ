@@ -1,0 +1,114 @@
+{
+  "executed_at": "2026-10-31T00:41:39.680148",
+  "total_checks": 13,
+  "passed_checks": 13,
+  "failed_checks": 0,
+  "warning_checks": 0,
+  "total_anomaly_count": 0,
+  "checks": [
+    {
+      "check_id": "CHK-01",
+      "name": "Primary Key Uniqueness",
+      "status": "PASSED",
+      "description": "Verifies that every primary key in all 10 entities is unique without collision.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-02",
+      "name": "Foreign Key Integrity",
+      "status": "PASSED",
+      "description": "Validates that all foreign key references resolve to valid parent master records.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-03",
+      "name": "Missing Values & Null Constraints",
+      "status": "PASSED",
+      "description": "Checks that mandatory operational fields contain non-null values.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-04",
+      "name": "Categorical Enum Validation",
+      "status": "PASSED",
+      "description": "Asserts all state and category columns conform to allowed domain enums.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-05",
+      "name": "Date Chronology Verification",
+      "status": "PASSED",
+      "description": "Confirms timestamp sequences obey causality (e.g. signup <= start <= churn).",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-06",
+      "name": "Subscription Lifecycle Consistency",
+      "status": "PASSED",
+      "description": "Checks consistency between subscription status, termination timestamps, and reasons.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-07",
+      "name": "Monetary Calculation Checks",
+      "status": "PASSED",
+      "description": "Validates non-negative constraints on recurring revenues and invoice amounts.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-08",
+      "name": "Payment Reconciliation",
+      "status": "PASSED",
+      "description": "Verifies that transaction status exactly matches settled payment totals.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-09",
+      "name": "Duplicate Telemetry Detection",
+      "status": "PASSED",
+      "description": "Asserts no duplicate monthly snapshots exist per subscription.",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-10",
+      "name": "Offer Eligibility Gate Compliance",
+      "status": "PASSED",
+      "description": "Ensures no treatment retention offer was delivered to an ineligible subscriber (EC-02).",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-11",
+      "name": "Experiment Partition Purity & Contamination Guard",
+      "status": "PASSED",
+      "description": "Confirms Treatment and Control groups are mutually exclusive without leakage (EC-03).",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-12",
+      "name": "Retention Attribution Integrity",
+      "status": "PASSED",
+      "description": "Validates that customers receiving multiple offers have documented attribution flags (EC-04).",
+      "issues": [],
+      "affected_record_ids": []
+    },
+    {
+      "check_id": "CHK-13",
+      "name": "Temporal Leakage Audit",
+      "status": "PASSED",
+      "description": "Audits feature extraction time barrier to ensure zero forward data leakage (EC-01).",
+      "issues": [],
+      "affected_record_ids": []
+    }
+  ]
+}

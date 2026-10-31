@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Customer Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Customer Management</h3>
+    <p class="text-muted mb-0">Unified customer directory across {{ total_count }} subscriber accounts.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('generator.generator_view') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-gear me-1"></i>Data Generator
+    </a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0 table-search-input" data-target="customerTable" placeholder="Search by customer ID, name, company, or email...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" onchange="location = this.value;">
+          <option value="{{ url_for('customers.customer_list') }}">All Industries</option>
+          {% for ind in industries %}
+          <option value="{{ url_for('customers.customer_list', industry=ind) }}" {% if selected_industry == ind %}selected{% endif %}>{{ ind }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" onchange="location = this.value;">
+          <option value="{{ url_for('customers.customer_list') }}">All Tiers</option>
+          {% for t in ['Standard', 'Pro', 'Enterprise'] %}
+          <option value="{{ url_for('customers.customer_list', tier=t) }}" {% if selected_tier == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 text-end text-muted small">
+        Showing {{ customers | length }} of {{ total_count }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="customerTable">
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Contact Name</th>
+            <th>Company</th>
+            <th>Industry</th>
+            <th>Tier</th>
+            <th>Cohort</th>
+            <th>Current Plan</th>
+            <th>Status</th>
+            <th>MRR</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+          {% set sub = c.subscriptions[0] if c.subscriptions else None %}
+          <tr>
+            <td class="fw-semibold">
+              <a href="{{ url_for('customers.customer_detail', customer_id=c.customer_id) }}" class="text-decoration-none">
+                {{ c.customer_id }}
+              </a>
+            </td>
+            <td>{{ c.full_name }}</td>
+            <td>{{ c.company_name }}</td>
+            <td><span class="badge bg-light text-dark border">{{ c.industry }}</span></td>
+            <td>
+              {% if c.customer_tier == 'Enterprise' %}
+                <span class="badge bg-primary-subtle text-primary">{{ c.customer_tier }}</span>
+              {% elif c.customer_tier == 'Pro' %}
+                <span class="badge bg-info-subtle text-info">{{ c.customer_tier }}</span>
+              {% else %}
+                <span class="badge bg-secondary-subtle text-secondary">{{ c.customer_tier }}</span>
+              {% endif %}
+            </td>
+            <td>{{ c.cohort_month }}</td>
+            <td>{{ sub.plan_name if sub else 'N/A' }}</td>
+            <td>
+              {% if sub and sub.status == 'Active' %}
+                <span class="badge badge-status-active">Active</span>
+              {% elif sub and sub.status == 'Canceled' %}
+                <span class="badge badge-status-canceled">Canceled</span>
+              {% elif sub and sub.status == 'Delinquent' %}
+                <span class="badge badge-status-delinquent">Delinquent</span>
+              {% else %}
+                <span class="badge bg-secondary">Unknown</span>
+              {% endif %}
+            </td>
+            <td class="fw-semibold">${{ "{:,.2f}".format(sub.mrr) if sub else '0.00' }}</td>
+            <td>
+              <a href="{{ url_for('customers.customer_detail', customer_id=c.customer_id) }}" class="btn btn-sm btn-outline-teal">
+                360° Profile
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('customers.customer_list', page=current_page-1, industry=selected_industry, tier=selected_tier) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('customers.customer_list', page=p, industry=selected_industry, tier=selected_tier) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('customers.customer_list', page=current_page+1, industry=selected_industry, tier=selected_tier) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

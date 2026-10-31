@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.full_name }} — 360° Profile{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-1">
+      <li class="breadcrumb-item"><a href="{{ url_for('customers.customer_list') }}">Customers</a></li>
+      <li class="breadcrumb-item active">{{ customer.customer_id }}</li>
+    </ol>
+  </nav>
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h3 class="fw-bold mb-1">{{ customer.full_name }} <span class="text-muted fw-normal">({{ customer.company_name }})</span></h3>
+      <p class="text-muted mb-0"><i class="bi bi-envelope me-1"></i>{{ customer.email }} | <i class="bi bi-building me-1"></i>{{ customer.industry }} | <i class="bi bi-calendar3 me-1"></i>Cohort: {{ customer.cohort_month }}</p>
+    </div>
+    <div>
+      <a href="{{ url_for('offers.eligibility_view') }}?customer_id={{ customer.customer_id }}" class="btn btn-teal">
+        <i class="bi bi-shield-check me-1"></i>Check Offer Eligibility
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Left Column: Subscription & Risk Scoring -->
+  <div class="col-lg-4">
+    <!-- Subscription Card -->
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-card-checklist me-2 text-teal"></i>Subscription Plan</span>
+        {% if primary_sub and primary_sub.status == 'Active' %}
+          <span class="badge badge-status-active">Active</span>
+        {% elif primary_sub and primary_sub.status == 'Canceled' %}
+          <span class="badge badge-status-canceled">Canceled</span>
+        {% else %}
+          <span class="badge badge-status-delinquent">Delinquent</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if primary_sub %}
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Subscription ID:</span>
+          <span class="fw-semibold">{{ primary_sub.subscription_id }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Current Plan:</span>
+          <span class="fw-bold text-teal">{{ primary_sub.plan_name }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Billing Cycle:</span>
+          <span>{{ primary_sub.billing_cycle }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Monthly Recurring Revenue:</span>
+          <span class="fw-bold fs-5">${{ "{:,.2f}".format(primary_sub.mrr) }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Unit Delivery Cost:</span>
+          <span>${{ "{:,.2f}".format(primary_sub.unit_cost) }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Gross Margin:</span>
+          <span class="text-success fw-semibold">${{ "{:,.2f}".format(primary_sub.gross_margin) }} ({{ "{:.1f}".format(primary_sub.margin_percentage) }}%)</span>
+        </div>
+        {% if primary_sub.status == 'Canceled' %}
+        <hr>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Canceled Date:</span>
+          <span class="text-danger">{{ primary_sub.canceled_at.strftime('%Y-%m-%d') if primary_sub.canceled_at else 'N/A' }}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Churn Reason:</span>
+          <span class="badge bg-danger">{{ primary_sub.churn_reason }}</span>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="text-muted">No subscription record found.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Churn Risk Assessment Card -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-shield-exclamation me-2 text-danger"></i>Churn Risk Assessment</span>
+        {% if risk_data.risk_category == 'Critical' %}
+          <span class="badge badge-risk-critical">Critical Risk</span>
+        {% elif risk_data.risk_category == 'High' %}
+          <span class="badge badge-risk-high">High Risk</span>
+        {% elif risk_data.risk_category == 'Medium' %}
+          <span class="badge badge-risk-medium">Medium Risk</span>
+        {% else %}
+          <span class="badge badge-risk-low">Low Risk</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <div class="text-center mb-3">
+          <div class="display-5 fw-bold {% if risk_data.risk_category in ['High', 'Critical'] %}text-danger{% else %}text-teal{% endif %}">
+            {{ risk_data.risk_score }}
+          </div>
+          <div class="small text-muted">Estimated Churn Propensity (30d Horizon)</div>
+        </div>
+
+        <h6 class="fw-semibold text-uppercase small text-muted mb-2">Contributing Factors:</h6>
+        <ul class="list-unstyled mb-3">
+          {% for factor in risk_data.contributing_factors %}
+          <li class="small mb-1 d-flex align-items-start gap-2">
+            <i class="bi bi-dot text-danger fs-5 lh-1"></i>
+            <span>{{ factor }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <h6 class="fw-semibold text-uppercase small text-muted mb-2">Recommended Playbook:</h6>
+        <div class="p-2 bg-light rounded small border">
+          <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+          {{ risk_data.recommended_action }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Tabbed Telemetry Views -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs card-header-tabs m-0 px-3 pt-2" id="profileTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" id="usage-tab" data-bs-toggle="tab" data-bs-target="#usage" type="button" role="tab">
+              <i class="bi bi-activity me-1"></i>Usage History ({{ usage_snapshots | length }})
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing" type="button" role="tab">
+              <i class="bi bi-credit-card me-1"></i>Billing ({{ billing_events | length }})
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="support-tab" data-bs-toggle="tab" data-bs-target="#support" type="button" role="tab">
+              <i class="bi bi-headset me-1"></i>Support ({{ support_cases | length }})
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" id="campaigns-tab" data-bs-toggle="tab" data-bs-target="#campaigns" type="button" role="tab">
+              <i class="bi bi-megaphone me-1"></i>Campaigns ({{ campaign_contacts | length }})
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card-body">
+        <div class="tab-content" id="profileTabsContent">
+          <!-- Usage Tab -->
+          <div class="tab-pane fade show active" id="usage" role="tabpanel">
+            <div style="height: 220px;" class="mb-4">
+              <canvas id="customerUsageChart"></canvas>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Active Days</th>
+                    <th>Logins</th>
+                    <th>Session Duration</th>
+                    <th>API Calls</th>
+                    <th>Utilization</th>
+                    <th>Decline %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in usage_snapshots %}
+                  <tr>
+                    <td class="fw-semibold">{{ s.snapshot_month }}</td>
+                    <td>{{ s.active_days }} / 31</td>
+                    <td>{{ s.login_count }}</td>
+                    <td>{{ "{:,.1f}".format(s.total_session_minutes) }} min</td>
+                    <td>{{ "{:,}".format(s.api_call_count) }}</td>
+                    <td>{{ s.license_utilization_pct }}%</td>
+                    <td>
+                      {% if s.usage_decline_pct > 20 %}
+                        <span class="text-danger fw-semibold">+{{ s.usage_decline_pct }}% drop</span>
+                      {% elif s.usage_decline_pct < 0 %}
+                        <span class="text-success">{{ s.usage_decline_pct }}% growth</span>
+                      {% else %}
+                        <span>{{ s.usage_decline_pct }}%</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Billing Tab -->
+          <div class="tab-pane fade" id="billing" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Invoice Date</th>
+                    <th>Due Date</th>
+                    <th>Billed</th>
+                    <th>Paid</th>
+                    <th>Status</th>
+                    <th>Retries</th>
+                    <th>Failure Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for b in billing_events %}
+                  <tr>
+                    <td>{{ b.billing_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ b.due_date.strftime('%Y-%m-%d') }}</td>
+                    <td class="fw-semibold">${{ "{:,.2f}".format(b.invoice_amount) }}</td>
+                    <td>${{ "{:,.2f}".format(b.paid_amount) }}</td>
+                    <td>
+                      {% if b.status == 'Paid' %}
+                        <span class="badge bg-success-subtle text-success">Paid</span>
+                      {% elif b.status == 'Failed' %}
+                        <span class="badge bg-danger-subtle text-danger">Failed</span>
+                      {% else %}
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ b.retry_count }}</td>
+                    <td class="small text-muted">{{ b.failure_reason }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Support Tab -->
+          <div class="tab-pane fade" id="support" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Case ID</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Opened</th>
+                    <th>Resolution Time</th>
+                    <th>CSAT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for c in support_cases %}
+                  <tr>
+                    <td class="fw-semibold">{{ c.case_id }}</td>
+                    <td>{{ c.category }}</td>
+                    <td>
+                      {% if c.priority == 'Critical' %}
+                        <span class="badge bg-danger">Critical</span>
+                      {% elif c.priority == 'High' %}
+                        <span class="badge bg-warning text-dark">High</span>
+                      {% else %}
+                        <span class="badge bg-light text-dark border">{{ c.priority }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ c.status }}</td>
+                    <td>{{ c.opened_at.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ "{:.1f}".format(c.resolution_hours) if c.resolution_hours else 'Open' }} hrs</td>
+                    <td>
+                      {% if c.csat_score %}
+                        <span class="fw-semibold {% if c.csat_score < 3 %}text-danger{% else %}text-success{% endif %}">
+                          {{ c.csat_score }}/5
+                        </span>
+                      {% else %}
+                        <span class="text-muted">—</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Campaigns Tab -->
+          <div class="tab-pane fade" id="campaigns" role="tabpanel">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Contact ID</th>
+                    <th>Experiment</th>
+                    <th>Arm</th>
+                    <th>Offer ID</th>
+                    <th>Assigned Date</th>
+                    <th>Response</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for camp in campaign_contacts %}
+                  <tr>
+                    <td class="fw-semibold">{{ camp.contact_id }}</td>
+                    <td>{{ camp.experiment_id }}</td>
+                    <td>
+                      <span class="badge {% if camp.experiment_group == 'Treatment' %}bg-primary{% else %}bg-secondary{% endif %}">
+                        {{ camp.experiment_group }}
+                      </span>
+                    </td>
+                    <td>{{ camp.offer_id or 'Status Quo' }}</td>
+                    <td>{{ camp.assigned_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ camp.response_status }}</span>
+                    </td>
+                    <td>
+                      {% if camp.retention_outcome %}
+                        {% if camp.retention_outcome.retained_after_horizon %}
+                          <span class="badge bg-success-subtle text-success">Retained (+${{ camp.retention_outcome.incremental_revenue }})</span>
+                        {% else %}
+                          <span class="badge bg-danger-subtle text-danger">Churned</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted">Pending</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const snapshots = {{ usage_snapshots_json | tojson }};
+  if (snapshots && snapshots.length > 0) {
+    const labels = snapshots.map(s => s.snapshot_month);
+    const activeDays = snapshots.map(s => s.active_days);
+    RetentionCharts.createLineChart("customerUsageChart", labels, activeDays, "Monthly Active Days");
+  }
+});
+</script>
+{% endblock %}

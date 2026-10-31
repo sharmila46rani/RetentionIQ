@@ -1,0 +1,49 @@
+{
+  "exported_at": "2026-10-31T00:41:39.711050",
+  "export_directory": "C:\\Users\\srini\\OneDrive\\Desktop\\RetentionIQ\\data\\exports",
+  "row_counts": {
+    "offers": 4,
+    "eligibility_rules": 8,
+    "customers": 1000,
+    "subscriptions": 1000,
+    "usage_snapshots": 12011,
+    "billing_events": 12011,
+    "support_cases": 1315,
+    "campaign_contacts": 213,
+    "churn_outcomes": 1000,
+    "retention_outcomes": 213
+  },
+  "checksums": {
+    "csv/offers.csv": "c3a9b393a4ac7114889698f83b8484e10093c79cb432d1219a191747b16b46f3",
+    "json/offers.json": "115a89296e5c3200e97f499d0f2a1b00a70f34471d68fc5a437034b978081215",
+    "csv/eligibility_rules.csv": "de6eb558335efff4350adb078c9570f8f9c8582fbe99a2d5f427973fb80a39f7",
+    "json/eligibility_rules.json": "c62908a124b78a9403b6e5017c3cd7cfaf96bb12284482f10e3927716f0fb6e5",
+    "csv/customers.csv": "8313ed514bc8c60ce8a4915d9a3777161e099825bec8a44489d61c8f0cb32539",
+    "json/customers.json": "297e96418059d37be061c1756fc1193ddd66b6d751ea1ddf0b11e9a3ea09f50f",
+    "csv/subscriptions.csv": "274c8908b0bb07cc96b6c733d33cb2f35485359ee34313cf78e3539c5a0a72a8",
+    "json/subscriptions.json": "feaaeea5b31a88d409bb5ed7863b9893bbf62590fa266e123031546868ca83aa",
+    "csv/usage_snapshots.csv": "f44f5e4addc10f07aea4621bd79cd0f88f8405472595625f29b916778f33c2e0",
+    "json/usage_snapshots.json": "1f5c9947ed06d90bfb605d76f6a8dd9ec404bf7b3b8c430c323b0af70719ca4c",
+    "csv/billing_events.csv": "d7804e83b222de2bbe021e0fe8b0777ff388a0d8de278a051899d03c2b3a0771",
+    "json/billing_events.json": "ac1340bce97736d2b12ef2d656ca75aecfe0fcb2ca47b8a80a73b8adf2ad21d6",
+    "csv/support_cases.csv": "b9ec78191deaa5619813188ae98323f607e0787b694fe542ee8bbd5113073285",
+    "json/support_cases.json": "d929fb20dae2d7657abcd1876bf4bed97ef32459ebe711bc12e53b8e8a41e373",
+    "csv/campaign_contacts.csv": "bc6e283debb81a3f671b34b37fc41245f6eb66dfc660393d568c825773c985fe",
+    "json/campaign_contacts.json": "47a313fa39bf823357624e3622b40ff771675ae5d0887941de9a92b4317d64f0",
+    "csv/churn_outcomes.csv": "12cc0e6ee8ebceac9a1fc4f66cd2ff8529465989714d52cab6924d88ec43f121",
+    "json/churn_outcomes.json": "032127465caa68b55808ffa4c412dcf456796908d238727505901b4bcc807297",
+    "csv/retention_outcomes.csv": "cbe217d283c8a7d0115a35c0b69ac9cbe340ebe994d47d1b71348fb7b635137c",
+    "json/retention_outcomes.json": "ff5a1422ae7473e3ac5694e7bfbbdd5d811ec3ed15ab9936daa8e88a67fe71ff",
+    "ground_truth/ground_truth.csv": "12cc0e6ee8ebceac9a1fc4f66cd2ff8529465989714d52cab6924d88ec43f121",
+    "ground_truth/ground_truth.json": "032127465caa68b55808ffa4c412dcf456796908d238727505901b4bcc807297",
+    "sql/retentioniq_dump.sql": "80af3257e0f9657913cd0a92ec64bc82def9099fd3204f77a4783503e8f5edeb",
+    "validation_report.json": "a75ef8babc9bc4ce7662e6d4cfb804c5d682b4fa1f5d7b20b32a923e9a38f276"
+  },
+  "quality_audit_summary": {
+    "total_checks": 13,
+    "passed_checks": 13,
+    "failed_checks": 0,
+    "warnings": 0,
+    "anomaly_count": 0
+  }
+}

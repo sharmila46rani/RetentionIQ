@@ -1,0 +1,9 @@
+Flask>=3.0.0
+SQLAlchemy>=2.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.4.0
+pytest>=8.0.0
+gunicorn>=21.2.0; sys_platform != 'win32'
+waitress>=3.0.0; sys_platform == 'win32'
+PyMySQL>=1.1.0

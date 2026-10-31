@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Churn Risk & Explainability Engine{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Churn Risk & Explainability Engine</h3>
+    <p class="text-muted mb-0">Explainable customer churn scoring with 30-day forward prediction horizon.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <form method="GET" action="{{ url_for('predictions.prediction_center') }}" class="d-flex gap-2">
+      <select name="model_type" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="RULE_BASED_BASELINE" {% if model_type == 'RULE_BASED_BASELINE' %}selected{% endif %}>
+          Model: Rule-Based Baseline (Transparent Heuristic)
+        </option>
+        <option value="RANDOM_FOREST" {% if model_type == 'RANDOM_FOREST' %}selected{% endif %}>
+          Model: Random Forest Classifier (Supervised ML)
+        </option>
+        <option value="LOGISTIC_REGRESSION" {% if model_type == 'LOGISTIC_REGRESSION' %}selected{% endif %}>
+          Model: Logistic Regression (Supervised ML)
+        </option>
+      </select>
+    </form>
+  </div>
+</div>
+
+<!-- Model Performance & Confusion Matrix Row -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon primary">
+        <i class="bi bi-bullseye"></i>
+      </div>
+      <div>
+        <div class="stat-label">Model Precision</div>
+        <div class="stat-value">{{ "{:.1%}".format(evaluation.precision) }}</div>
+        <div class="stat-subtext">True Positives / Predicted Positives</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon teal">
+        <i class="bi bi-funnel"></i>
+      </div>
+      <div>
+        <div class="stat-label">Model Recall</div>
+        <div class="stat-value">{{ "{:.1%}".format(evaluation.recall) }}</div>
+        <div class="stat-subtext">True Positives / Actual Churned</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon success">
+        <i class="bi bi-lightning-charge"></i>
+      </div>
+      <div>
+        <div class="stat-label">F1-Score</div>
+        <div class="stat-value">{{ "{:.3f}".format(evaluation.f1_score) }}</div>
+        <div class="stat-subtext">Harmonic Mean of Precision & Recall</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon warning">
+        <i class="bi bi-graph-up"></i>
+      </div>
+      <div>
+        <div class="stat-label">ROC-AUC Score</div>
+        <div class="stat-value">{{ "{:.3f}".format(evaluation.roc_auc) }}</div>
+        <div class="stat-subtext">Area Under Receiver Curve</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Confusion Matrix Card -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-grid-3x3 me-2 text-teal"></i>Confusion Matrix (Temporal Holdout Test)</span>
+        <span class="badge bg-light text-muted border">Sample: {{ evaluation.sample_size }}</span>
+      </div>
+      <div class="card-body d-flex flex-column justify-content-center">
+        <div class="row g-2 text-center">
+          <div class="col-6">
+            <div class="p-3 bg-light rounded border">
+              <div class="text-muted small text-uppercase">True Negatives (TN)</div>
+              <div class="fs-4 fw-bold text-success">{{ evaluation.confusion_matrix.tn }}</div>
+              <div class="small text-muted">Retained accurately predicted</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded border">
+              <div class="text-muted small text-uppercase">False Positives (FP)</div>
+              <div class="fs-4 fw-bold text-warning">{{ evaluation.confusion_matrix.fp }}</div>
+              <div class="small text-muted">False alarms</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded border">
+              <div class="text-muted small text-uppercase">False Negatives (FN)</div>
+              <div class="fs-4 fw-bold text-danger">{{ evaluation.confusion_matrix.fn }}</div>
+              <div class="small text-muted">Missed churn events</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded border">
+              <div class="text-muted small text-uppercase">True Positives (TP)</div>
+              <div class="fs-4 fw-bold text-primary">{{ evaluation.confusion_matrix.tp }}</div>
+              <div class="small text-muted">Churned accurately identified</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Distribution Chart Card -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-pie-chart me-2 text-teal"></i>Subscriber Risk Distribution
+      </div>
+      <div class="card-body">
+        <div style="height: 220px;">
+          <canvas id="riskDistributionChart"></canvas>
+        </div>
+        <div class="text-center mt-2 small text-muted">
+          Low: {{ risk_distribution.Low }} | Medium: {{ risk_distribution.Medium }} | High: {{ risk_distribution.High }} | Critical: {{ risk_distribution.Critical }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Predictions Table -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-check me-2 text-teal"></i>Customer Churn Predictions & Explainable Drivers</span>
+    <div class="w-25">
+      <input type="text" class="form-control form-control-sm table-search-input" data-target="predictionsTable" placeholder="Filter by customer ID or factor...">
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="predictionsTable">
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Plan & MRR</th>
+            <th>Tenure</th>
+            <th>Risk Score</th>
+            <th>Risk Tier</th>
+            <th>Main Contributing Factors</th>
+            <th>Recommended Action</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in predictions %}
+          <tr>
+            <td class="fw-semibold">
+              <a href="{{ url_for('customers.customer_detail', customer_id=p.customer_id) }}" class="text-decoration-none">
+                {{ p.customer_id }}
+              </a>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ p.plan_name }}</span>
+              <div class="small text-muted">${{ p.mrr }}/mo</div>
+            </td>
+            <td>{{ p.tenure_months }} mo</td>
+            <td>
+              <div class="fw-bold fs-6">{{ p.risk_score }}</div>
+            </td>
+            <td>
+              {% if p.risk_category == 'Critical' %}
+                <span class="badge badge-risk-critical">Critical</span>
+              {% elif p.risk_category == 'High' %}
+                <span class="badge badge-risk-high">High</span>
+              {% elif p.risk_category == 'Medium' %}
+                <span class="badge badge-risk-medium">Medium</span>
+              {% else %}
+                <span class="badge badge-risk-low">Low</span>
+              {% endif %}
+            </td>
+            <td style="max-width: 320px;">
+              <ul class="list-unstyled mb-0 small">
+                {% for f in p.contributing_factors %}
+                <li><i class="bi bi-caret-right-fill text-teal" style="font-size: 0.65rem;"></i> {{ f }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td class="small" style="max-width: 250px;">{{ p.recommended_action }}</td>
+            <td>
+              <a href="{{ url_for('offers.eligibility_view') }}?customer_id={{ p.customer_id }}" class="btn btn-sm btn-outline-teal" title="Check Retention Offers">
+                <i class="bi bi-gift"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const dist = {{ risk_distribution | tojson }};
+  RetentionCharts.createDoughnutChart(
+    "riskDistributionChart",
+    ["Low Risk", "Medium Risk", "High Risk", "Critical Risk"],
+    [dist.Low || 0, dist.Medium || 0, dist.High || 0, dist.Critical || 0],
+    [RetentionCharts.colors.success, RetentionCharts.colors.warning, "#F97316", RetentionCharts.colors.danger]
+  );
+});
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Usage Analytics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Usage Analytics</h3>
+    <p class="text-muted mb-0">Platform telemetry, user session duration, license utilization, and decline velocity.</p>
+  </div>
+  <div>
+    <span class="badge bg-light text-dark border p-2">Total Monthly Snapshots: {{ total_count }}</span>
+  </div>
+</div>
+
+<!-- Usage Trends Charts -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-graph-up me-2 text-teal"></i>Average Monthly Active Days
+      </div>
+      <div class="card-body">
+        <div style="height: 220px;">
+          <canvas id="avgActiveDaysChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-hdd-network me-2 text-teal"></i>Monthly API Call Volume
+      </div>
+      <div class="card-body">
+        <div style="height: 220px;">
+          <canvas id="apiCallsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-list-ul me-2 text-teal"></i>Telemetry Snapshots</span>
+    <div class="w-25">
+      <input type="text" class="form-control form-control-sm table-search-input" data-target="usageTable" placeholder="Filter snapshots...">
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="usageTable">
+        <thead>
+          <tr>
+            <th>Snapshot ID</th>
+            <th>Subscription</th>
+            <th>Month</th>
+            <th>Active Days</th>
+            <th>Logins</th>
+            <th>Total Sessions</th>
+            <th>API Requests</th>
+            <th>License Utilization</th>
+            <th>Usage Decline %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in snapshots %}
+          <tr>
+            <td class="fw-semibold small">{{ s.snapshot_id }}</td>
+            <td>{{ s.subscription_id }}</td>
+            <td>{{ s.snapshot_month }}</td>
+            <td>{{ s.active_days }} / 31</td>
+            <td>{{ s.login_count }}</td>
+            <td>{{ "{:,.1f}".format(s.total_session_minutes) }} min</td>
+            <td>{{ "{:,}".format(s.api_call_count) }}</td>
+            <td>{{ s.license_utilization_pct }}%</td>
+            <td>
+              {% if s.usage_decline_pct > 25 %}
+                <span class="text-danger fw-bold">+{{ s.usage_decline_pct }}% drop</span>
+              {% elif s.usage_decline_pct < 0 %}
+                <span class="text-success">{{ s.usage_decline_pct }}% growth</span>
+              {% else %}
+                <span>{{ s.usage_decline_pct }}%</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.usage_view', page=current_page-1) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.usage_view', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.usage_view', page=current_page+1) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const trends = {{ usage_trends | tojson }};
+  const labels = trends.map(t => t.month);
+
+  RetentionCharts.createLineChart("avgActiveDaysChart", labels, trends.map(t => t.avg_active_days), "Avg Active Days");
+  RetentionCharts.createBarChart("apiCallsChart", labels, [{
+    label: "Total API Calls",
+    data: trends.map(t => t.total_api_calls),
+    backgroundColor: RetentionCharts.colors.teal,
+  }]);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Retention Outcomes & Attribution{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Retention Outcomes & Attribution Engine</h3>
+    <p class="text-muted mb-0">Causal retention outcomes, financial attribution, and multi-touch conflict handling (EC-04).</p>
+  </div>
+  <div>
+    <span class="badge bg-warning-subtle text-dark border p-2">
+      <i class="bi bi-tag me-1"></i>Documented Rule: Last-Touch Primary Attribution
+    </span>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="bi bi-person-check-fill"></i></div>
+      <div>
+        <div class="stat-label">Retained Customers</div>
+        <div class="stat-value text-success">{{ retained_count }}</div>
+        <div class="stat-subtext">Across evaluated campaigns</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <div class="stat-label">Attributed Revenue</div>
+        <div class="stat-value">${{ "{:,.2f}".format(total_attributed_revenue) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon danger"><i class="bi bi-receipt"></i></div>
+      <div>
+        <div class="stat-label">Incurred Offer Cost</div>
+        <div class="stat-value text-danger">${{ "{:,.2f}".format(total_offer_cost) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="bi bi-tags-fill"></i></div>
+      <div>
+        <div class="stat-label">Multi-Attributed Flagged</div>
+        <div class="stat-value text-warning">{{ multi_attributed_count }}</div>
+        <div class="stat-subtext">EC-04 resolved without double counting</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-table me-2 text-teal"></i>Retention Outcome Evaluations</span>
+    <div class="w-25">
+      <input type="text" class="form-control form-control-sm table-search-input" data-target="outcomesTable" placeholder="Filter outcomes...">
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="outcomesTable">
+        <thead>
+          <tr>
+            <th>Retention ID</th>
+            <th>Contact ID</th>
+            <th>Customer ID</th>
+            <th>Retained After Horizon</th>
+            <th>Days Retained</th>
+            <th>Attributed Revenue</th>
+            <th>Offer Cost</th>
+            <th>Net Value</th>
+            <th>Attribution Policy (EC-04)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in outcomes %}
+          <tr>
+            <td class="fw-semibold small">{{ r.retention_id }}</td>
+            <td>{{ r.contact_id }}</td>
+            <td>
+              <a href="{{ url_for('customers.customer_detail', customer_id=r.customer_id) }}">
+                {{ r.customer_id }}
+              </a>
+            </td>
+            <td>
+              {% if r.retained_after_horizon %}
+                <span class="badge bg-success-subtle text-success">Retained</span>
+              {% else %}
+                <span class="badge bg-danger-subtle text-danger">Churned</span>
+              {% endif %}
+            </td>
+            <td>{{ r.days_retained }} days</td>
+            <td class="fw-semibold text-success">${{ "{:,.2f}".format(r.incremental_revenue) }}</td>
+            <td class="text-danger">${{ "{:,.2f}".format(r.offer_cost_incurred) }}</td>
+            <td class="fw-bold">${{ "{:,.2f}".format(r.net_campaign_value) }}</td>
+            <td>
+              {% if r.attribution_status == 'Primary_Attributed' %}
+                <span class="badge bg-primary-subtle text-primary">Primary_Attributed</span>
+              {% elif r.attribution_status == 'Multi_Attributed_Flagged' %}
+                <span class="badge bg-warning-subtle text-warning">Multi_Attributed_Flagged</span>
+              {% else %}
+                <span class="badge bg-light text-muted border">Non_Attributed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.outcome_view', page=current_page-1) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.outcome_view', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.outcome_view', page=current_page+1) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

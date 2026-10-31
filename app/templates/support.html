@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Support Case Analytics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Support Case Analytics</h3>
+    <p class="text-muted mb-0">Customer satisfaction, ticket resolution velocity, escalations, and friction indicators.</p>
+  </div>
+  <div>
+    <span class="badge bg-light text-dark border p-2">Total Tickets: {{ support_data.total_cases }}</span>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="bi bi-inbox-fill"></i></div>
+      <div>
+        <div class="stat-label">Total Support Cases</div>
+        <div class="stat-value">{{ support_data.total_cases }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="stat-label">Active / Open Cases</div>
+        <div class="stat-value">{{ support_data.open_cases }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-stopwatch"></i></div>
+      <div>
+        <div class="stat-label">Avg Resolution Time</div>
+        <div class="stat-value">{{ support_data.avg_resolution_hours }} hrs</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon success"><i class="bi bi-star-fill"></i></div>
+      <div>
+        <div class="stat-label">Avg CSAT Rating</div>
+        <div class="stat-value">{{ support_data.avg_csat }} / 5.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-headset me-2 text-teal"></i>Support Tickets Log</span>
+    <div class="w-25">
+      <input type="text" class="form-control form-control-sm table-search-input" data-target="supportTable" placeholder="Filter tickets...">
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="supportTable">
+        <thead>
+          <tr>
+            <th>Case ID</th>
+            <th>Customer ID</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Opened Date</th>
+            <th>Resolution Time</th>
+            <th>Escalations</th>
+            <th>CSAT Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in support_cases %}
+          <tr>
+            <td class="fw-semibold">{{ c.case_id }}</td>
+            <td>
+              <a href="{{ url_for('customers.customer_detail', customer_id=c.customer_id) }}">
+                {{ c.customer_id }}
+              </a>
+            </td>
+            <td>{{ c.category }}</td>
+            <td>
+              {% if c.priority == 'Critical' %}
+                <span class="badge bg-danger">Critical</span>
+              {% elif c.priority == 'High' %}
+                <span class="badge bg-warning text-dark">High</span>
+              {% else %}
+                <span class="badge bg-light text-dark border">{{ c.priority }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('analytics.update_support_status') }}" class="d-inline">
+                <input type="hidden" name="case_id" value="{{ c.case_id }}">
+                <select name="status" class="form-select form-select-sm d-inline-block w-auto py-0 px-2" style="font-size: 0.75rem;" onchange="this.form.submit()">
+                  <option value="Open" {% if c.status == 'Open' %}selected{% endif %}>Open</option>
+                  <option value="In_Progress" {% if c.status == 'In_Progress' %}selected{% endif %}>In_Progress</option>
+                  <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                  <option value="Escalated" {% if c.status == 'Escalated' %}selected{% endif %}>Escalated</option>
+                </select>
+              </form>
+            </td>
+            <td>{{ c.opened_at.strftime('%Y-%m-%d') }}</td>
+            <td>{{ "{:.1f}".format(c.resolution_hours) if c.resolution_hours else 'Open' }} hrs</td>
+            <td>{{ c.escalation_count }}</td>
+            <td>
+              {% if c.csat_score %}
+                <span class="fw-semibold {% if c.csat_score < 3 %}text-danger{% else %}text-success{% endif %}">
+                  {{ c.csat_score }} / 5
+                </span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.support_view', page=current_page-1) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.support_view', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.support_view', page=current_page+1) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

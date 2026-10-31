@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Offer Eligibility & Margin Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Offer Eligibility & Margin Gatekeeper</h3>
+    <p class="text-muted mb-0">Real-time gatekeeping enforcing tenure, risk tier, cooldown, and unit contribution margins.</p>
+  </div>
+  <div>
+    <span class="badge bg-danger-subtle text-danger border p-2">
+      <i class="bi bi-shield-x me-1"></i>Mandatory Edge Case EC-02 Guard Active
+    </span>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Interactive Form -->
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-filter-circle me-2 text-teal"></i>Evaluate Subscriber Eligibility
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('offers.eligibility_view') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted">Customer Account:</label>
+            <select name="customer_id" class="form-select" required>
+              <option value="">-- Select Customer --</option>
+              {% for c in customers %}
+              <option value="{{ c.customer_id }}" {% if selected_customer_id == c.customer_id %}selected{% endif %}>
+                {{ c.customer_id }} — {{ c.full_name }} ({{ c.company_name }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted">Target Retention Offer:</label>
+            <select name="offer_id" class="form-select" required>
+              <option value="">-- Select Offer --</option>
+              {% for o in offers %}
+              <option value="{{ o.offer_id }}" {% if selected_offer_id == o.offer_id %}selected{% endif %}>
+                {{ o.offer_id }} — {{ o.offer_name }} ({{ o.offer_type }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-muted">Evaluated Risk Tier (Optional):</label>
+            <select name="risk_category" class="form-select">
+              <option value="High" {% if selected_risk == 'High' %}selected{% endif %}>High Risk</option>
+              <option value="Critical" {% if selected_risk == 'Critical' %}selected{% endif %}>Critical Risk</option>
+              <option value="Medium" {% if selected_risk == 'Medium' %}selected{% endif %}>Medium Risk</option>
+              <option value="Low" {% if selected_risk == 'Low' %}selected{% endif %}>Low Risk</option>
+            </select>
+            <div class="form-text small">Rule parameters will validate whether offer allows this risk tier.</div>
+          </div>
+
+          <button type="submit" class="btn btn-teal w-100">
+            <i class="bi bi-cpu me-1"></i>Run Eligibility & Margin Check
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision Results -->
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-file-earmark-check me-2 text-teal"></i>Eligibility Audit Decision</span>
+        {% if result %}
+          {% if result.is_eligible %}
+            <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>APPROVED / ELIGIBLE</span>
+          {% else %}
+            <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>REJECTED / INELIGIBLE</span>
+          {% endif %}
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if result %}
+          {% if dispatch_error %}
+          <div class="alert alert-danger d-flex align-items-center mb-3">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+              <strong>EC-02 Exception Intercepted: IneligibleCustomerException</strong>
+              <div class="small">{{ dispatch_error }}</div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if dispatch_success %}
+          <div class="alert alert-success d-flex align-items-center mb-3">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <div>
+              <strong>Offer Successfully Dispatched!</strong>
+              <div class="small">Campaign contact record created: {{ dispatch_success }}</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Financial Margin Check -->
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border text-center">
+                <div class="small text-muted text-uppercase">Calculated Offer Cost</div>
+                <div class="fs-4 fw-bold text-danger">${{ "{:,.2f}".format(result.calculated_offer_cost) }}</div>
+                <div class="small text-muted">Discount concession</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border text-center">
+                <div class="small text-muted text-uppercase">Expected Net Margin (3 Mo)</div>
+                <div class="fs-4 fw-bold text-success">${{ "{:,.2f}".format(result.expected_margin) }}</div>
+                <div class="small text-muted">Gross margin less discount</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Passed Rules -->
+          <h6 class="fw-bold small text-success text-uppercase mb-2">
+            <i class="bi bi-check-circle-fill me-1"></i>Passed Eligibility Rules ({{ result.passed_rules | length }}):
+          </h6>
+          <ul class="list-group mb-3 small">
+            {% for p in result.passed_rules %}
+            <li class="list-group-item list-group-item-success py-1">
+              <i class="bi bi-check2 text-success me-1"></i>{{ p }}
+            </li>
+            {% endfor %}
+          </ul>
+
+          <!-- Violated Rules -->
+          {% if result.violated_rules %}
+          <h6 class="fw-bold small text-danger text-uppercase mb-2">
+            <i class="bi bi-x-circle-fill me-1"></i>Rule Violations ({{ result.violated_rules | length }}):
+          </h6>
+          <ul class="list-group mb-4 small">
+            {% for v in result.violated_rules %}
+            <li class="list-group-item list-group-item-danger py-1">
+              <i class="bi bi-exclamation-circle text-danger me-1"></i>{{ v }}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          <!-- Dispatch Action Form -->
+          <form method="POST" action="{{ url_for('offers.dispatch_offer_route') }}">
+            <input type="hidden" name="customer_id" value="{{ result.customer_id }}">
+            <input type="hidden" name="offer_id" value="{{ result.offer_id }}">
+            <input type="hidden" name="risk_category" value="{{ selected_risk }}">
+            <div class="d-flex justify-content-between align-items-center border-top pt-3">
+              <div class="small text-muted">
+                Audit Timestamp: {{ result.evaluated_at }}
+              </div>
+              <button type="submit" class="btn {% if result.is_eligible %}btn-teal{% else %}btn-outline-danger{% endif %}">
+                <i class="bi bi-send me-1"></i>Dispatch Retention Offer
+              </button>
+            </div>
+          </form>
+
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-arrow-left-circle display-4 mb-3 d-block text-teal"></i>
+            <h5>Select a customer and retention offer</h5>
+            <p class="small">The eligibility gatekeeper will test all tenure, plan, cooldown, and contribution margin constraints.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

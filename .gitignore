@@ -1,0 +1,30 @@
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+instance/
+*.pem
+*.key
+*.cert
+secrets.json
+
+# Local databases and backups
+*.sqlite
+*.sqlite3
+*.db
+data/backups/
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db

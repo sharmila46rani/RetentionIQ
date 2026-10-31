@@ -1,0 +1,5 @@
+offer_id,offer_name,offer_type,discount_pct,discount_amount,max_offer_cost,eligible_plans,min_tenure_months,min_subscription_mrr,max_discount_cap,valid_from,valid_to,status,created_at
+OFF-2026-000001,Executive 20% Retention Credit,Discount,20.0,0.0,200.0,"Growth,Scale,Enterprise",3,100.0,250.0,2026-01-01T00:00:00,2026-12-31T00:00:00,Active,2025-01-01T00:00:00
+OFF-2026-000002,Free 1-Month Loyalty Relief,Free_Month,100.0,0.0,150.0,"Starter,Growth",6,49.0,149.0,2026-01-01T00:00:00,2026-12-31T00:00:00,Active,2025-01-01T00:00:00
+OFF-2026-000003,Scale Tier Upgrade Incentive,Tier_Upgrade,30.0,0.0,120.0,Growth,4,149.0,120.0,2026-01-01T00:00:00,2026-12-31T00:00:00,Active,2025-01-01T00:00:00
+OFF-2026-000004,Feature Addon Booster Pack,Feature_Addon,0.0,50.0,50.0,"Starter,Growth,Scale,Enterprise",1,49.0,50.0,2026-01-01T00:00:00,2026-12-31T00:00:00,Active,2025-01-01T00:00:00

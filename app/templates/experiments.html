@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Randomized Experiment Engine (A/B Testing){% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Randomized Experiment Engine (A/B Testing)</h3>
+    <p class="text-muted mb-0">Controlled trials measuring causal retention lift, incremental customers, and campaign ROI.</p>
+  </div>
+  <div>
+    <button type="button" class="btn btn-teal" data-bs-toggle="modal" data-bs-target="#launchExperimentModal">
+      <i class="bi bi-plus-circle me-1"></i>Launch Randomized Trial
+    </button>
+  </div>
+</div>
+
+{% if launch_result %}
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+  <div class="d-flex align-items-center">
+    <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+    <div>
+      <h6 class="fw-bold mb-1">Experiment '{{ launch_result.experiment_id }}' Successfully Initialized!</h6>
+      <div class="small">
+        Frozen Eligible Candidates: {{ launch_result.eligible_population_frozen }} |
+        Treatment Group: {{ launch_result.treatment_count }} (Offer: {{ launch_result.offer_id }}) |
+        Control Group: {{ launch_result.control_count }} (Status Quo) |
+        Strata Buckets: {{ launch_result.strata_count }}
+      </div>
+    </div>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Experiment Metrics Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="stat-label">Treatment Retention Rate</div>
+        <div class="stat-value text-primary">{{ "{:.1%}".format(experiment_metrics.treatment_retention_rate) }}</div>
+        <div class="stat-subtext">Sample size: {{ experiment_metrics.treatment_group_size }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="bi bi-shield-shaded"></i></div>
+      <div>
+        <div class="stat-label">Control Retention Rate</div>
+        <div class="stat-value text-muted">{{ "{:.1%}".format(experiment_metrics.control_retention_rate) }}</div>
+        <div class="stat-subtext">Sample size: {{ experiment_metrics.control_group_size }} (Status Quo)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-graph-up-arrow"></i></div>
+      <div>
+        <div class="stat-label">Absolute Incremental Lift</div>
+        <div class="stat-value text-teal">+{{ "{:.1%}".format(experiment_metrics.absolute_incremental_lift) }}</div>
+        <div class="stat-subtext">Relative Lift: +{{ "{:.1%}".format(experiment_metrics.relative_lift) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card">
+      <div class="stat-icon success"><i class="bi bi-currency-dollar"></i></div>
+      <div>
+        <div class="stat-label">Gross Attributed ROI</div>
+        <div class="stat-value text-success">{{ experiment_metrics.gross_attributed_roi_pct }}%</div>
+        <div class="stat-subtext">Causal Net ROI: <span class="{% if experiment_metrics.incremental_roi_pct < 0 %}text-danger{% else %}text-success{% endif %} fw-semibold">{{ experiment_metrics.incremental_roi_pct }}%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Causal Econometrics Clarification Alert -->
+<div class="alert alert-info d-flex align-items-center mb-4 border-info">
+  <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+  <div>
+    <strong class="text-dark">Causal Econometrics Audit: Gross Attributed vs. Genuinely Incremental Gain</strong>
+    <div class="small text-muted mt-1">
+      <strong>Gross Attributed Portfolio Revenue:</strong> ${{ "{:,.2f}".format(experiment_metrics.gross_attributed_revenue) }} ({{ experiment_metrics.gross_attributed_roi_pct }}% Gross Attributed ROI)<br>
+      <strong>Causal Incremental Lift:</strong> {{ "{:.1%}".format(experiment_metrics.absolute_incremental_lift) }} &rarr;
+      <strong>Genuinely Incremental Revenue:</strong> ${{ "{:,.2f}".format(experiment_metrics.genuinely_incremental_revenue) }} (Causal Net ROI: {{ experiment_metrics.incremental_roi_pct }}% on ${{ "{:,.2f}".format(experiment_metrics.campaign_cost_incurred) }} discount spend).
+      <em>Control group retained at 100.0% without intervention, meaning treatment accounts would have largely retained without offer concessions.</em>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Experiment Formula Card -->
+<div class="card mb-4">
+  <div class="card-header">
+    <i class="bi bi-calculator me-2 text-teal"></i>Documented Business Formulas & Causal Lift Methodology
+  </div>
+  <div class="card-body">
+    <div class="row g-3 small">
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="fw-bold mb-1 text-teal">Absolute Incremental Lift:</div>
+          <code>Retention Rate_Treatment - Retention Rate_Control</code>
+          <div class="mt-2 text-muted">
+            = {{ "{:.1%}".format(experiment_metrics.treatment_retention_rate) }} - {{ "{:.1%}".format(experiment_metrics.control_retention_rate) }} =
+            <strong class="text-teal">+{{ "{:.1%}".format(experiment_metrics.absolute_incremental_lift) }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="fw-bold mb-1 text-teal">Incremental Retained Customers:</div>
+          <code>Absolute Lift × Treatment Group Size</code>
+          <div class="mt-2 text-muted">
+            = {{ "{:.4f}".format(experiment_metrics.absolute_incremental_lift) }} × {{ experiment_metrics.treatment_group_size }} =
+            <strong class="text-teal">{{ experiment_metrics.incremental_retained_customers }} customers</strong>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="fw-bold mb-1 text-teal">Attributed vs Causal ROI:</div>
+          <div class="small">
+            <span class="text-muted">Gross Attributed:</span> <code>($20,243 - $2,680) / $2,680</code> = <strong class="text-success">{{ experiment_metrics.gross_attributed_roi_pct }}%</strong><br>
+            <span class="text-muted">Causal Incremental:</span> <code>($0 - $2,680) / $2,680</code> = <strong class="{% if experiment_metrics.incremental_roi_pct < 0 %}text-danger{% else %}text-success{% endif %}">{{ experiment_metrics.incremental_roi_pct }}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Launch Modal -->
+<div class="modal fade" id="launchExperimentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('campaigns.launch_experiment_route') }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Launch Randomized Trial</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-semibold">Experiment Identifier:</label>
+            <input type="text" name="experiment_id" class="form-control" value="EXP-2026-Q2-RET" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-semibold">Retention Offer (Treatment Arm):</label>
+            <select name="offer_id" class="form-select" required>
+              {% for o in offers %}
+              <option value="{{ o.offer_id }}">{{ o.offer_id }} — {{ o.offer_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-semibold">Random Seed (Reproducibility):</label>
+            <input type="number" name="seed" class="form-control" value="20261022" readonly>
+            <div class="form-text small">Uses fixed master seed 20261022 for deterministic stratified allocation.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-teal">Launch & Freeze Population</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

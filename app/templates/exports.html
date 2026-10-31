@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Data Exports & Reproducibility{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Data Exports & Reproducibility Manifest</h3>
+    <p class="text-muted mb-0">Multi-format database dumps in CSV, JSON, and ANSI SQL DDL+DML with cryptographic SHA-256 verification.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('exports.trigger_export_route') }}" class="btn btn-teal">
+      <i class="bi bi-file-earmark-arrow-down me-1"></i>Re-Export All Datasets
+    </a>
+  </div>
+</div>
+
+{% if export_success %}
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+  <div class="d-flex align-items-center">
+    <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+    <div>
+      <h6 class="fw-bold mb-1">Multi-Format Export Successfully Refreshed!</h6>
+      <div class="small">Export Directory: <code>{{ manifest.export_directory }}</code> | Exported at: {{ manifest.exported_at }}</div>
+    </div>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+  <!-- Export Manifest Summary -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-file-earmark-text me-2 text-teal"></i>Export Manifest
+      </div>
+      <div class="card-body">
+        <div class="small mb-2 d-flex justify-content-between">
+          <span class="text-muted">Exported At:</span>
+          <span class="fw-semibold">{{ manifest.exported_at if manifest else 'N/A' }}</span>
+        </div>
+        <div class="small mb-3 d-flex justify-content-between">
+          <span class="text-muted">Quality Checks:</span>
+          <span class="badge bg-success-subtle text-success">
+            {{ manifest.quality_audit_summary.passed_checks }}/{{ manifest.quality_audit_summary.total_checks }} Passed
+          </span>
+        </div>
+
+        <h6 class="fw-semibold small text-uppercase text-muted border-top pt-3 mb-2">Entity Row Counts:</h6>
+        <ul class="list-group list-group-flush small mb-3">
+          {% if manifest and manifest.row_counts %}
+            {% for tbl, count in manifest.row_counts.items() %}
+            <li class="list-group-item px-0 py-1 d-flex justify-content-between">
+              <span>{{ tbl }}:</span>
+              <span class="fw-semibold">{{ count | number_format }} rows</span>
+            </li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+
+        <div class="p-2 rounded bg-light border small text-muted">
+          <i class="bi bi-terminal me-1"></i>CLI Export Command:<br>
+          <code>python scripts/export_data.py</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checksums & Downloadable Artifacts -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-shield-check me-2 text-teal"></i>Generated Artifacts & SHA-256 Checksums
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Artifact File</th>
+                <th>Format</th>
+                <th>Cryptographic SHA-256 Checksum</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if manifest and manifest.checksums %}
+                {% for fname, sha in manifest.checksums.items() %}
+                <tr>
+                  <td class="fw-semibold small">{{ fname }}</td>
+                  <td>
+                    {% if '.csv' in fname %}
+                      <span class="badge bg-primary-subtle text-primary">CSV</span>
+                    {% elif '.json' in fname %}
+                      <span class="badge bg-warning-subtle text-warning">JSON</span>
+                    {% elif '.sql' in fname %}
+                      <span class="badge bg-info-subtle text-info">SQL</span>
+                    {% endif %}
+                  </td>
+                  <td class="small font-monospace text-muted" style="font-size: 0.75rem;">
+                    {{ sha }}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('exports.download_file', relative_path=fname) }}" class="btn btn-sm btn-outline-teal" title="Download">
+                      <i class="bi bi-download"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    No export manifest found. Click "Re-Export All Datasets" to generate.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

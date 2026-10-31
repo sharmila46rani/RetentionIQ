@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}System Documentation & Traceability{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">System Documentation & Requirement Traceability</h3>
+    <p class="text-muted mb-0">Technical architecture, business formulas, edge-case designs, and reproducible benchmarks.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-3">
+    <!-- Quick Nav -->
+    <div class="card position-sticky" style="top: 80px;">
+      <div class="card-header bg-white fw-bold">Documentation Index</div>
+      <div class="list-group list-group-flush small">
+        <a href="#arch" class="list-group-item list-group-item-action">1. System Architecture</a>
+        <a href="#schema" class="list-group-item list-group-item-action">2. Relational Data Model</a>
+        <a href="#formulas" class="list-group-item list-group-item-action">3. Business Formulas & ROI</a>
+        <a href="#edgecases" class="list-group-item list-group-item-action">4. Mandatory Edge Cases (EC-01 to 04)</a>
+        <a href="#reproducibility" class="list-group-item list-group-item-action">5. Fixed-Seed Reproducibility</a>
+        <a href="#testing" class="list-group-item list-group-item-action">6. Pytest Verification Suite</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-9">
+    <!-- Section 1 -->
+    <div class="card mb-4" id="arch">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-diagram-3 me-2"></i>1. System Architecture & Component Design</h5>
+      </div>
+      <div class="card-body">
+        <p>RetentionIQ is structured as a decoupled multi-tier enterprise SaaS solution:</p>
+        <ul>
+          <li><strong>Presentation Layer:</strong> Responsive HTML5, Bootstrap 5, Chart.js, and client-side table filters styled in a modern Navy & Teal palette.</li>
+          <li><strong>Application Layer:</strong> Flask 3.1 with blueprint-based modular routing, structured REST API endpoints, pagination, and transactional database integrity.</li>
+          <li><strong>Domain Services:</strong> Pure Python engines for synthetic data generation, temporal feature extraction, explainable churn scoring, offer margin gating, A/B randomization, and outcome tracking.</li>
+          <li><strong>Persistence Layer:</strong> SQLAlchemy 2.0 ORM maintaining 100% dialect parity between SQLite (local development) and MySQL (production deployment), enforcing foreign key cascading and check constraints.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="card mb-4" id="schema">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-database me-2"></i>2. Relational Data Model (10 Entities)</h5>
+      </div>
+      <div class="card-body">
+        <p>The system enforces strict naming conventions and relational integrity across 10 core entities:</p>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Entity Name</th>
+                <th>Deterministic ID Convention</th>
+                <th>Relationship & Cardinality</th>
+                <th>Business Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Customer</strong></td>
+                <td><code>CUS-000001</code></td>
+                <td>1:M Subscriptions, 1:M Tickets, 1:M Contacts</td>
+                <td>Subscriber account identities and industry profiles.</td>
+              </tr>
+              <tr>
+                <td><strong>Subscription</strong></td>
+                <td><code>SUB-CUS-000001-01</code></td>
+                <td>1:M Snapshots, 1:M Invoices</td>
+                <td>Recurring billing agreement, MRR, lifecycle states.</td>
+              </tr>
+              <tr>
+                <td><strong>UsageSnapshot</strong></td>
+                <td><code>SNAP-SUB-CUS-000001-01-2026-01</code></td>
+                <td>M:1 Subscription (Unique per Month)</td>
+                <td>Monthly active days, session minutes, API calls, decline %.</td>
+              </tr>
+              <tr>
+                <td><strong>BillingEvent</strong></td>
+                <td><code>BIL-CUS-000001-202601</code></td>
+                <td>M:1 Subscription</td>
+                <td>Invoicing, charge attempts, retries, failure reasons.</td>
+              </tr>
+              <tr>
+                <td><strong>SupportCase</strong></td>
+                <td><code>CAS-CUS-000001-001</code></td>
+                <td>M:1 Customer</td>
+                <td>Support tickets, priority, resolution hours, CSAT.</td>
+              </tr>
+              <tr>
+                <td><strong>Offer</strong></td>
+                <td><code>OFF-2026-000001</code></td>
+                <td>1:M EligibilityRules, 1:M Contacts</td>
+                <td>Retention incentive catalog, discount rates, max costs.</td>
+              </tr>
+              <tr>
+                <td><strong>EligibilityRule</strong></td>
+                <td><code>RUL-OFF-2026-000001-01</code></td>
+                <td>M:1 Offer</td>
+                <td>Tenure, MRR, risk tier, and margin threshold rules.</td>
+              </tr>
+              <tr>
+                <td><strong>CampaignContact</strong></td>
+                <td><code>CAM-2026-000001</code></td>
+                <td>M:1 Customer, M:1 Offer, 1:1 Outcome</td>
+                <td>Randomized trial participant assignment and delivery log.</td>
+              </tr>
+              <tr>
+                <td><strong>ChurnOutcome</strong></td>
+                <td><code>CHURN-CUS-000001-2026</code></td>
+                <td>M:1 Customer, M:1 Subscription</td>
+                <td>Isolated ground-truth churn outcomes (never leaked to features).</td>
+              </tr>
+              <tr>
+                <td><strong>RetentionOutcome</strong></td>
+                <td><code>RET-CAM-2026-000001</code></td>
+                <td>1:1 CampaignContact</td>
+                <td>Financial tracking, incremental revenue, offer costs, ROI.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="card mb-4" id="formulas">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-calculator me-2"></i>3. Business Formulas & Financial ROI Methodology</h5>
+      </div>
+      <div class="card-body">
+        <p>All experimental metrics are derived from documented causal retention accounting formulas:</p>
+        <div class="p-3 bg-light rounded border mb-3">
+          <ul class="mb-0">
+            <li class="mb-2"><strong>Treatment Retention Rate ($R_T$):</strong> $\frac{\text{Retained Treatment Customers}}{N_{\text{Treatment}}}$</li>
+            <li class="mb-2"><strong>Control Retention Rate ($R_C$):</strong> $\frac{\text{Retained Control Customers}}{N_{\text{Control}}}$</li>
+            <li class="mb-2"><strong>Absolute Incremental Lift:</strong> $R_T - R_C$</li>
+            <li class="mb-2"><strong>Relative Lift:</strong> $\frac{R_T - R_C}{R_C}$</li>
+            <li class="mb-2"><strong>Incremental Retained Customers:</strong> $(R_T - R_C) \times N_{\text{Treatment}}$</li>
+            <li class="mb-2"><strong>Incremental Campaign Benefit:</strong> $\text{Incremental Retained} \times \text{Expected Contribution Margin}$</li>
+            <li><strong>Financial Campaign ROI:</strong> $\frac{\text{Incremental Benefit} - \text{Incurred Offer Costs}}{\text{Incurred Offer Costs}} \times 100\%$</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="card mb-4" id="edgecases">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-shield-lock me-2"></i>4. Mandatory Edge Cases Architecture (EC-01 to EC-04)</h5>
+      </div>
+      <div class="card-body">
+        <div class="accordion" id="edgeCaseAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ec1">
+                <strong>EC-01: Churn Label Precedes Prediction Date (Temporal Data Leakage)</strong>
+              </button>
+            </h2>
+            <div id="ec1" class="accordion-collapse collapse show" data-bs-parent="#edgeCaseAccordion">
+              <div class="accordion-body small">
+                <strong>Detection:</strong> <code>FeatureEngineeringService</code> checks <code>sub.canceled_at <= prediction_cutoff</code>. If true, the customer already churned before the observation horizon began.<br>
+                <strong>Handling:</strong> Flagged as temporal anomaly, excluded from active feature matrix, and audited in the Data Quality report.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ec2">
+                <strong>EC-02: Offer Sent to Ineligible Customer</strong>
+              </button>
+            </h2>
+            <div id="ec2" class="accordion-collapse collapse" data-bs-parent="#edgeCaseAccordion">
+              <div class="accordion-body small">
+                <strong>Detection:</strong> <code>OfferEligibilityEngine</code> evaluates 10 criteria (status, tenure, MRR, plan, cooldown, contribution margin).<br>
+                <strong>Handling:</strong> If any rule fails, dispatch is intercepted, <code>IneligibleCustomerException</code> is raised, and the violated rule codes are logged and presented to the operator.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ec3">
+                <strong>EC-03: Treatment / Control Leakage</strong>
+              </button>
+            </h2>
+            <div id="ec3" class="accordion-collapse collapse" data-bs-parent="#edgeCaseAccordion">
+              <div class="accordion-body small">
+                <strong>Detection:</strong> <code>UniqueConstraint('experiment_id', 'customer_id')</code> on <code>CampaignContact</code> table and pre-flight check in <code>RandomizedExperimentEngine</code>.<br>
+                <strong>Handling:</strong> Raises <code>ExperimentConflictException</code> if a customer is duplicated across groups or assigned simultaneously to conflicting active experiments.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ec4">
+                <strong>EC-04: Retained Customer Attributed to Multiple Offers</strong>
+              </button>
+            </h2>
+            <div id="ec4" class="accordion-collapse collapse" data-bs-parent="#edgeCaseAccordion">
+              <div class="accordion-body small">
+                <strong>Detection:</strong> <code>evaluate_retention_outcomes_with_attribution()</code> detects customers with multiple contacts across campaigns.<br>
+                <strong>Handling:</strong> Applies documented <strong>Last-Touch Primary Attribution Policy</strong>; flags overlapping outcomes as <code>Multi_Attributed_Flagged</code> to retain full contact history while strictly preventing double-counting in incremental ROI.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="card mb-4" id="reproducibility">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-terminal me-2"></i>5. Fixed-Seed Reproducibility & CLI Execution</h5>
+      </div>
+      <div class="card-body">
+        <p>To demonstrate full reproducibility with master seed <code>20261022</code>:</p>
+        <pre class="bg-light p-3 rounded border"><code># Generate 20,000 subscribers over 18 months:
+python scripts/generate_data.py --customers 20000 --months 18 --seed 20261022 --save-db --reset-db
+
+# Export all datasets to CSV, JSON, and ANSI SQL DDL+DML:
+python scripts/export_data.py --outdir data/exports</code></pre>
+      </div>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="card mb-4" id="testing">
+      <div class="card-header bg-white">
+        <h5 class="fw-bold mb-0 text-teal"><i class="bi bi-check2-circle me-2"></i>6. Automated Pytest Verification Suite</h5>
+      </div>
+      <div class="card-body">
+        <p>Execute the automated test suite covering all models, synthetic generation, feature engineering, churn prediction, A/B experiments, and the 4 mandatory edge cases:</p>
+        <pre class="bg-light p-3 rounded border"><code>python -m pytest tests/ -v</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

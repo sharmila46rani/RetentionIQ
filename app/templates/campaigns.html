@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Campaign Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Campaign Management</h3>
+    <p class="text-muted mb-0">Direct retention campaigns, randomized experiment arms, and recipient contact logs.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('campaigns.experiment_view') }}" class="btn btn-teal">
+      <i class="bi bi-sliders me-1"></i>A/B Experiment Studio
+    </a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-6">
+        <input type="text" class="form-control table-search-input" data-target="campaignTable" placeholder="Search by contact ID, customer ID, or experiment...">
+      </div>
+      <div class="col-md-3">
+        <span class="badge bg-light text-dark border p-2 w-100 text-center">
+          Total Contact Deliveries: {{ total_count }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="campaignTable">
+        <thead>
+          <tr>
+            <th>Contact ID</th>
+            <th>Experiment</th>
+            <th>Customer ID</th>
+            <th>Arm</th>
+            <th>Stratum</th>
+            <th>Offer ID</th>
+            <th>Assigned Date</th>
+            <th>Delivery Status</th>
+            <th>Customer Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in contacts %}
+          <tr>
+            <td class="fw-semibold">{{ c.contact_id }}</td>
+            <td><span class="badge bg-light text-dark border">{{ c.experiment_id }}</span></td>
+            <td>
+              <a href="{{ url_for('customers.customer_detail', customer_id=c.customer_id) }}">
+                {{ c.customer_id }}
+              </a>
+            </td>
+            <td>
+              {% if c.experiment_group == 'Treatment' %}
+                <span class="badge bg-primary">Treatment</span>
+              {% else %}
+                <span class="badge bg-secondary">Control</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ c.stratum_id }}</td>
+            <td>{{ c.offer_id or 'Status Quo' }}</td>
+            <td>{{ c.assigned_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              {% if c.delivery_status == 'Delivered' %}
+                <span class="badge bg-success-subtle text-success">Delivered</span>
+              {% elif c.delivery_status == 'Suppressed' %}
+                <span class="badge bg-light text-muted border">Suppressed (Control)</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning">{{ c.delivery_status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if c.response_status == 'Accepted' %}
+                <span class="badge bg-success">Accepted</span>
+              {% elif c.response_status == 'Rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% elif c.response_status == 'Ignored' %}
+                <span class="badge bg-secondary">Ignored</span>
+              {% else %}
+                <span class="badge bg-light text-muted border">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.campaign_view', page=current_page-1) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.campaign_view', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('campaigns.campaign_view', page=current_page+1) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

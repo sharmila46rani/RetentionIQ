@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Billing Analytics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Billing Analytics & Revenue Assurance</h3>
+    <p class="text-muted mb-0">Invoicing, payment reconciliation, charge retry rates, and involuntary churn delinquency.</p>
+  </div>
+  <div>
+    <span class="badge bg-light text-dark border p-2">Total Invoices: {{ total_count }}</span>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="bi bi-receipt"></i></div>
+      <div>
+        <div class="stat-label">Total Invoiced</div>
+        <div class="stat-value">${{ "{:,.2f}".format(billing_summary.total_invoiced) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon teal"><i class="bi bi-cash-coin"></i></div>
+      <div>
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value">${{ "{:,.2f}".format(billing_summary.total_collected) }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon danger"><i class="bi bi-exclamation-octagon"></i></div>
+      <div>
+        <div class="stat-label">Payment Failure Rate</div>
+        <div class="stat-value">{{ billing_summary.failure_rate_pct }}%</div>
+        <div class="stat-subtext">{{ billing_summary.failed_invoices_count }} failed invoice charges</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="stat-label">Total Past-Due</div>
+        <div class="stat-value">${{ "{:,.2f}".format(billing_summary.total_outstanding) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-credit-card me-2 text-teal"></i>Invoice Transactions</span>
+    <div class="w-25">
+      <input type="text" class="form-control form-control-sm table-search-input" data-target="billingTable" placeholder="Filter invoices...">
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="billingTable">
+        <thead>
+          <tr>
+            <th>Billing ID</th>
+            <th>Subscription</th>
+            <th>Invoice Date</th>
+            <th>Due Date</th>
+            <th>Invoice Amount</th>
+            <th>Settled Amount</th>
+            <th>Status</th>
+            <th>Retry Attempts</th>
+            <th>Rejection Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in billing_events %}
+          <tr>
+            <td class="fw-semibold small">{{ b.billing_id }}</td>
+            <td>{{ b.subscription_id }}</td>
+            <td>{{ b.billing_date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ b.due_date.strftime('%Y-%m-%d') }}</td>
+            <td class="fw-bold">${{ "{:,.2f}".format(b.invoice_amount) }}</td>
+            <td>${{ "{:,.2f}".format(b.paid_amount) }}</td>
+            <td>
+              {% if b.status == 'Paid' %}
+                <span class="badge bg-success-subtle text-success">Paid</span>
+              {% elif b.status == 'Failed' %}
+                <span class="badge bg-danger-subtle text-danger">Failed</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning">Pending</span>
+              {% endif %}
+            </td>
+            <td>{{ b.retry_count }}</td>
+            <td class="small text-muted">{{ b.failure_reason }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <div class="small text-muted">Page {{ current_page }} of {{ total_pages }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.billing_view', page=current_page-1) }}">Previous</a>
+        </li>
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+        <li class="page-item {% if p == current_page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.billing_view', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('analytics.billing_view', page=current_page+1) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

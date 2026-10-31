@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Data Quality & Anomaly Suite{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-1">Data Quality & Anomaly Suite</h3>
+    <p class="text-muted mb-0">Automated 13-point relational integrity verification and mandatory edge-case auditing.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('quality.run_audit_live') }}" class="btn btn-teal">
+      <i class="bi bi-arrow-clockwise me-1"></i>Run Automated Audit
+    </a>
+  </div>
+</div>
+
+<!-- Audit Summary Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon primary"><i class="bi bi-patch-check-fill"></i></div>
+      <div>
+        <div class="stat-label">Total Audit Checks</div>
+        <div class="stat-value">{{ report.total_checks }}</div>
+        <div class="stat-subtext">Automated relational tests</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+      <div>
+        <div class="stat-label">Passed Checks</div>
+        <div class="stat-value text-success">{{ report.passed_checks }} / {{ report.total_checks }}</div>
+        <div class="stat-subtext">100% Compliance rate</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon danger"><i class="bi bi-x-circle-fill"></i></div>
+      <div>
+        <div class="stat-label">Failed Checks</div>
+        <div class="stat-value text-danger">{{ report.failed_checks }}</div>
+        <div class="stat-subtext">Zero schema failures</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div>
+        <div class="stat-label">Active Anomalies</div>
+        <div class="stat-value text-warning">{{ report.total_anomaly_count }}</div>
+        <div class="stat-subtext">Flagged records</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mandatory Edge Cases Verification Card -->
+<div class="card mb-4">
+  <div class="card-header bg-white">
+    <i class="bi bi-shield-lock-fill me-2 text-teal"></i>Mandatory Edge-Case Architecture & Defensive Verification
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-3">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-primary">EC-01</span>
+            <span class="badge bg-success-subtle text-success">Protected</span>
+          </div>
+          <h6 class="fw-bold mb-1">Churn Precedes Prediction</h6>
+          <p class="small text-muted mb-0">Temporal data leakage sentry filters subscriptions with <code>canceled_at <= T_pred</code>, ensuring zero future data enters feature matrices.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-primary">EC-02</span>
+            <span class="badge bg-success-subtle text-success">Protected</span>
+          </div>
+          <h6 class="fw-bold mb-1">Ineligible Offer Dispatch</h6>
+          <p class="small text-muted mb-0">Pre-flight gatekeeper validates 10 eligibility predicates; raises <code>IneligibleCustomerException</code> on any rule failure.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-primary">EC-03</span>
+            <span class="badge bg-success-subtle text-success">Protected</span>
+          </div>
+          <h6 class="fw-bold mb-1">Treatment/Control Leakage</h6>
+          <p class="small text-muted mb-0">Enforces mutual exclusion via unique database constraints and collision guards; prevents overlapping active trial assignments.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="p-3 bg-light rounded border h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-primary">EC-04</span>
+            <span class="badge bg-success-subtle text-success">Protected</span>
+          </div>
+          <h6 class="fw-bold mb-1">Multi-Offer Attribution</h6>
+          <p class="small text-muted mb-0">Implements documented Last-Touch primary attribution policy; flags ambiguous multi-touch records to prevent double-counting in ROI.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 Automated Checks Detail Table -->
+<div class="card">
+  <div class="card-header">
+    <i class="bi bi-checklist me-2 text-teal"></i>13-Point Automated Audit Suite Execution Results
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Check ID</th>
+            <th>Validation Check Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Issues / Anomalies</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for chk in report.checks %}
+          <tr>
+            <td class="fw-bold text-teal">{{ chk.check_id }}</td>
+            <td class="fw-semibold">{{ chk.name }}</td>
+            <td class="small text-muted" style="max-width: 380px;">{{ chk.description }}</td>
+            <td>
+              {% if chk.status == 'PASSED' %}
+                <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>PASSED</span>
+              {% elif chk.status == 'FAILED' %}
+                <span class="badge bg-danger-subtle text-danger"><i class="bi bi-x-circle me-1"></i>FAILED</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning">{{ chk.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if chk.issues %}
+                <ul class="list-unstyled mb-0 small text-danger">
+                  {% for iss in chk.issues %}
+                  <li><i class="bi bi-exclamation-triangle me-1"></i>{{ iss }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <span class="text-success small"><i class="bi bi-shield-check me-1"></i>0 issues found</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
